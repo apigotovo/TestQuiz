@@ -13,18 +13,21 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Poll
-from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerializer
+from .models import Poll, Option, Question
+from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerializer, UpdatePollSerializer, \
+    AddQuestionSerializer, AllQuestionSerializer, UpdateQuestionSerializer
 
 
 # Методы для администраторов
+
+# Обработка опросов
 class AddPoll(CreateAPIView):
     serializer_class = AddPollSerializer
     permission_classes = [IsAdminUser]
 
 
-class EditPoll(UpdateAPIView):
-    serializer_class = AddPollSerializer
+class UpdatePoll(UpdateAPIView):
+    serializer_class = UpdatePollSerializer
     permission_classes = [IsAdminUser]
     queryset = Poll.objects.all()
 
@@ -34,8 +37,40 @@ class DeletePoll(DestroyAPIView):
     queryset = Poll.objects.all()
 
 
-# Общедоступные методы
-class ListPoll(ListAPIView):
+class ListAllPoll(ListAPIView):
+    serializer_class = PollSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Poll.objects.all()
+
+
+# Обработка вопросов и вариантов ответа
+class AddQuestion(CreateAPIView):
+    serializer_class = AddQuestionSerializer
+    permission_classes = [IsAdminUser]
+
+
+class DeleteQuestion(DestroyAPIView):
+    permission_classes = [IsAdminUser]
+    queryset = Question.objects.all()
+
+
+class UpdateQuestion(UpdateAPIView):
+    serializer_class = UpdateQuestionSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Option.objects.all()
+
+
+class ListAllQuestions(ListAPIView):
+    serializer_class = AllQuestionSerializer
+    permission_classes = [IsAdminUser]
+    # queryset = Question.objects.filter()
+
+    def get_queryset(self):
+        return Question.objects.filter(poll=self.kwargs['pk'])
+
+
+# Пользовательские методы
+class ListActivePoll(ListAPIView):
     serializer_class = PollSerializer
 
     def get_queryset(self):

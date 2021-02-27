@@ -37,7 +37,11 @@ class Question(models.Model):
 
 
 class Option(models.Model):
-    question = models.ForeignKey(Question, unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
+
+    def __str__(self):
+        return str(self.title)
+
+    question = models.ForeignKey(Question, related_name='options', unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
     title = models.CharField(max_length=50, verbose_name='вариант ответа')
 
 
