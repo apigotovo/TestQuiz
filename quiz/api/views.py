@@ -57,13 +57,12 @@ class DeleteQuestion(DestroyAPIView):
 class UpdateQuestion(UpdateAPIView):
     serializer_class = UpdateQuestionSerializer
     permission_classes = [IsAdminUser]
-    queryset = Option.objects.all()
+    queryset = Question.objects.all()
 
 
 class ListAllQuestions(ListAPIView):
     serializer_class = AllQuestionSerializer
     permission_classes = [IsAdminUser]
-    # queryset = Question.objects.filter()
 
     def get_queryset(self):
         return Question.objects.filter(poll=self.kwargs['pk'])
@@ -82,5 +81,4 @@ class ListRespondentPoll(ListAPIView):
     serializer_class = RespondentPollSerializer
 
     def get(self, request, *args, **kwargs):
-        respondent_id = int(self.kwargs['respondent_id'])
-        return Poll.objects.filter(question__baseanswer__respondent=respondent_id)
+        return Poll.objects.filter(question__baseanswer__respondent=self.kwargs['respondent_id'])

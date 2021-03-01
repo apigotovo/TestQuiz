@@ -1,7 +1,19 @@
+import os
+from datetime import datetime
+
+from django.conf import settings
 from django.db.models import Q
 from rest_framework import serializers
 
 from .models import Poll, Question, BaseAnswer, Option
+
+
+def logger(message, mr_data):
+    now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    path = os.path.join(settings.BASE_DIR, f'error_log/{now}_{message}.txt')
+    file = open(path, 'w')
+    file.write(str(mr_data))
+    file.close()
 
 
 # Получение всех опросов
@@ -52,13 +64,6 @@ class AddPollSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# Получить всё вопросы для заданного опроса (для администраторов)
-class AllQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Question
-        fields = '__all__'
-
-
 # Добавление нового вопроса (блок сериалайзеров)
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,22 +81,62 @@ class AddQuestionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         options_data = validated_data.pop('options')
+        logger('____', options_data)
         question = Question.objects.create(**validated_data)
         for option in options_data:
             Option.objects.create(question=question, **option)
         return question
 
 
-# Обновление вопроса
+# Обновление вопроса (блок сериалайзеров)
+class UpdateOptionSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = Option
+        fields = ['id', 'title']
+        # optional_fields = ['id']
+
+
 class UpdateQuestionSerializer(serializers.ModelSerializer):
 
-    options = OptionSerializer(many=True)
+    options = UpdateOptionSerializer(many=True, required=False)
 
     class Meta:
         model = Question
         fields = ['title', 'q_type', 'poll', 'options']
 
     def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
+        options_data = validated_data.pop('options', None)
+        logger('s', options_data)
+
+        instance.title = validated_data.get('title')
+        instance.q_type = validated_data.get('q_type')
+        instance.poll = validated_data.get('poll')
+
+        if options_data is not None:
+            for option in options_data:
+                opt_id = option.pop('id', None)
+                if opt_id is not None:
+                    opt = Option.objects.get(pk=opt_id)
+                    opt.title = option['title']
+                    opt.save()
+                else:
+                    Option.objects.create(question=instance, **option)
+
+        instance.save()
+        return instance
+
+
+# Получить всё вопросы для заданного опроса c вариантами ответа
+class AllQuestionSerializer(serializers.ModelSerializer):
+
+    options = UpdateOptionSerializer(many=True)
+
+    class Meta:
+        model = Question
+        fields = ['id', 'poll', 'title', 'q_type', 'options']
+
 
 
