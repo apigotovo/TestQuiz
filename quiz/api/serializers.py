@@ -41,7 +41,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class RespondentPollSerializer(serializers.ModelSerializer):
-
     questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
@@ -72,7 +71,6 @@ class OptionSerializer(serializers.ModelSerializer):
 
 
 class AddQuestionSerializer(serializers.ModelSerializer):
-
     options = OptionSerializer(many=True)
 
     class Meta:
@@ -81,7 +79,6 @@ class AddQuestionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         options_data = validated_data.pop('options')
-        logger('____', options_data)
         question = Question.objects.create(**validated_data)
         for option in options_data:
             Option.objects.create(question=question, **option)
@@ -90,7 +87,6 @@ class AddQuestionSerializer(serializers.ModelSerializer):
 
 # Обновление вопроса (блок сериалайзеров)
 class UpdateOptionSerializer(serializers.ModelSerializer):
-
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -100,7 +96,6 @@ class UpdateOptionSerializer(serializers.ModelSerializer):
 
 
 class UpdateQuestionSerializer(serializers.ModelSerializer):
-
     options = UpdateOptionSerializer(many=True, required=False)
 
     class Meta:
@@ -109,19 +104,25 @@ class UpdateQuestionSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         options_data = validated_data.pop('options', None)
-        logger('s', options_data)
 
         instance.title = validated_data.get('title')
         instance.q_type = validated_data.get('q_type')
         instance.poll = validated_data.get('poll')
 
         if options_data is not None:
+            options_queryset = Option.objects.filter(question=instance)
+            option_key = [key.get('id') for key in options_data]
+
+            for option in options_queryset:
+                if not (option.pk in option_key):
+                    option.delete()
+
             for option in options_data:
                 opt_id = option.pop('id', None)
                 if opt_id is not None:
-                    opt = Option.objects.get(pk=opt_id)
-                    opt.title = option['title']
-                    opt.save()
+                    opt_item = options_queryset.get(pk=opt_id)
+                    opt_item.title = option['title']
+                    opt_item.save()
                 else:
                     Option.objects.create(question=instance, **option)
 
@@ -131,12 +132,8 @@ class UpdateQuestionSerializer(serializers.ModelSerializer):
 
 # Получить всё вопросы для заданного опроса c вариантами ответа
 class AllQuestionSerializer(serializers.ModelSerializer):
-
     options = UpdateOptionSerializer(many=True)
 
     class Meta:
         model = Question
         fields = ['id', 'poll', 'title', 'q_type', 'options']
-
-
-
