@@ -23,7 +23,14 @@ class PollSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# Ответ на вопрос (публикация ответа)
+# Регистрация нового респондента
+class CreateRespondentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Respondent
+        fields = '__all__'
+
+
+# Ответ на вопрос (публикация ответа) (блок сериалайзеров)
 class OptionAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionAnswer
@@ -88,7 +95,7 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         return answer
 
 
-# Получение пройденных опросов с вопросами и ответами
+# Получение пройденных опросов с вопросами и ответами (блок сериалайзеров)
 class AnswerSerializer(serializers.ModelSerializer):
     answer = serializers.StringRelatedField(many=True)
 

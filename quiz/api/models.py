@@ -47,12 +47,18 @@ class Option(models.Model):
 
 class Respondent(models.Model):
 
+    def __str__(self):
+        return str(self.id)
+
     class Meta:
         verbose_name_plural = 'пользователи'
         verbose_name = 'пользователь'
 
 
 class BaseAnswer(models.Model):
+
+    def __str__(self):
+        return str(self.question)
 
     class Meta:
         verbose_name_plural = 'ответы'

@@ -15,7 +15,8 @@ from rest_framework.views import APIView
 
 from .models import Poll, Option, Question
 from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerializer, UpdatePollSerializer, \
-    AddQuestionSerializer, AllQuestionSerializer, UpdateQuestionSerializer
+    AddQuestionSerializer, AllQuestionSerializer, UpdateQuestionSerializer, CreateAnswerSerializer, \
+    CreateRespondentSerializer
 
 
 # Методы для администраторов
@@ -86,3 +87,7 @@ class ListRespondentPoll(ListAPIView):
 
 class CreateAnswer(CreateAPIView):
     serializer_class = CreateAnswerSerializer
+
+
+class CreateRespondent(CreateAnswer):
+    serializer_class = CreateRespondentSerializer
