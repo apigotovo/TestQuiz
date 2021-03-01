@@ -54,40 +54,40 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        try:
-            question = Question.objects.get(pk=validated_data['question'])
-        except Question.DoesNotExist:
-            raise ValueError('Некорректный id вопроса')
-        try:
-            respondent = Respondent.objects.get(pk=validated_data['respondent'])
-        except Respondent.DoesNotExist:
-            raise ValueError('Некорректный id респондента')
-
-        if question.q_type == 'radio':
+        if validated_data['question'].q_type == 'radio':
             response_options = validated_data.pop('response_options', None)
             if response_options is not None:
                 response = response_options.pop()
                 if len(response_options) == 0:
-                    answer = BaseAnswer.objects.create(question=question, respondent=respondent)
-                    OptionAnswer.objects.create(response=response['response'], baseanswer_ptr=answer)
+                    answer = OptionAnswer.objects.create(
+                        question=validated_data['question'],
+                        respondent=validated_data['respondent'],
+                        response=response['response']
+                    )
                 else:
                     raise ValueError('Для данного вопроса необходимо выбрать 1 вариант ответа')
             else:
                 raise ValueError('Необходимо передать выбранный вариант ответа')
 
-        elif question.q_type == 'check':
+        elif validated_data['question'].q_type == 'check':
             response_options = validated_data.pop('response_options', None)
             if response_options is not None:
-                answer = BaseAnswer.objects.create(question=question, respondent=respondent)
+                answer = BaseAnswer.objects.create(
+                    question=validated_data['question'],
+                    respondent=validated_data['respondent']
+                )
                 for response in response_options:
                     OptionAnswer.objects.create(response=response['response'], baseanswer_ptr=answer)
             else:
                 return ValueError('Необходимо передать выбранные варианты ответа')
 
-        elif question.q_type == 'text':
+        elif validated_data['question'].q_type == 'text':
             response = validated_data.pop('response_text', None)
             if response is not None:
-                answer = BaseAnswer.objects.create(question=question, respondent=respondent)
+                answer = BaseAnswer.objects.create(
+                    question=validated_data['question'],
+                    respondent=validated_data['respondent']
+                )
                 TextAnswer.objects.create(response=response, baseanswer_ptr=answer)
             else:
                 raise ValueError('Необходимо передать текст ответа')
@@ -164,7 +164,6 @@ class UpdateOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
         fields = ['id', 'title']
-        # optional_fields = ['id']
 
 
 class UpdateQuestionSerializer(serializers.ModelSerializer):

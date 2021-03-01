@@ -64,14 +64,18 @@ class BaseAnswer(models.Model):
         verbose_name_plural = 'ответы'
         verbose_name = 'ответ'
 
-    question = models.ForeignKey(Question, unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
-    respondent = models.ForeignKey(Respondent, unique=False, on_delete=models.CASCADE, verbose_name='пользователь')
+    question = models.ForeignKey(Question, related_name='question', unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
+    respondent = models.ForeignKey(Respondent, related_name='respondent', unique=False, on_delete=models.CASCADE, verbose_name='пользователь')
 
 
 class TextAnswer(BaseAnswer):
 
     def __str__(self):
         return str(self.response)
+
+    class Meta:
+        verbose_name_plural = 'тексты'
+        verbose_name = 'текст'
 
     response = models.TextField(verbose_name='ответ текстом')
 
@@ -80,5 +84,9 @@ class OptionAnswer(BaseAnswer):
 
     def __str__(self):
         return str(self.response)
+
+    class Meta:
+        verbose_name_plural = 'опции'
+        verbose_name = 'опция'
 
     response = models.ForeignKey(Option, related_name='response', unique=False, verbose_name='ответ из вариантов', on_delete=models.CASCADE)
