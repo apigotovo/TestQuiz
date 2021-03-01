@@ -82,3 +82,7 @@ class ListRespondentPoll(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         return Poll.objects.filter(question__baseanswer__respondent=self.kwargs['respondent_id'])
+
+
+class CreateAnswer(CreateAPIView):
+    serializer_class = CreateAnswerSerializer

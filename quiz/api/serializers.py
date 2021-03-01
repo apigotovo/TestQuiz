@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from rest_framework import serializers
 
-from .models import Poll, Question, BaseAnswer, Option
+from .models import Poll, Question, BaseAnswer, Option, OptionAnswer, TextAnswer, Respondent
 
 
 def logger(message, mr_data):
@@ -21,6 +21,71 @@ class PollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Poll
         fields = '__all__'
+
+
+# Ответ на вопрос (публикация ответа)
+class OptionAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OptionAnswer
+        fields = ['response']
+
+
+class TextAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TextAnswer
+        fields = ['response']
+
+
+class CreateAnswerSerializer(serializers.ModelSerializer):
+
+    response_options = OptionAnswerSerializer(many=True, required=False)
+    response_text = TextAnswerSerializer(required=False)
+
+    class Meta:
+        model = BaseAnswer
+        fields = ['question', 'respondent', 'response_options', 'response_text']
+
+    def create(self, validated_data):
+
+        try:
+            question = Question.objects.get(pk=validated_data['question'])
+        except Question.DoesNotExist:
+            raise ValueError('Некорректный id вопроса')
+        try:
+            respondent = Respondent.objects.get(pk=validated_data['respondent'])
+        except Respondent.DoesNotExist:
+            raise ValueError('Некорректный id респондента')
+
+        if question.q_type == 'radio':
+            response_options = validated_data.pop('response_options', None)
+            if response_options is not None:
+                response = response_options.pop()
+                if len(response_options) == 0:
+                    answer = BaseAnswer.objects.create(question=question, respondent=respondent)
+                    OptionAnswer.objects.create(response=response['response'], baseanswer_ptr=answer)
+                else:
+                    raise ValueError('Для данного вопроса необходимо выбрать 1 вариант ответа')
+            else:
+                raise ValueError('Необходимо передать выбранный вариант ответа')
+
+        elif question.q_type == 'check':
+            response_options = validated_data.pop('response_options', None)
+            if response_options is not None:
+                answer = BaseAnswer.objects.create(question=question, respondent=respondent)
+                for response in response_options:
+                    OptionAnswer.objects.create(response=response['response'], baseanswer_ptr=answer)
+            else:
+                return ValueError('Необходимо передать выбранные варианты ответа')
+
+        elif question.q_type == 'text':
+            response = validated_data.pop('response_text', None)
+            if response is not None:
+                answer = BaseAnswer.objects.create(question=question, respondent=respondent)
+                TextAnswer.objects.create(response=response, baseanswer_ptr=answer)
+            else:
+                raise ValueError('Необходимо передать текст ответа')
+
+        return answer
 
 
 # Получение пройденных опросов с вопросами и ответами
@@ -130,7 +195,7 @@ class UpdateQuestionSerializer(serializers.ModelSerializer):
         return instance
 
 
-# Получить всё вопросы для заданного опроса c вариантами ответа
+# Получить всё вопросы для заданного опроса c вариантами ответов
 class AllQuestionSerializer(serializers.ModelSerializer):
     options = UpdateOptionSerializer(many=True)
 

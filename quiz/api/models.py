@@ -75,4 +75,4 @@ class OptionAnswer(BaseAnswer):
     def __str__(self):
         return str(self.response)
 
-    response = models.ForeignKey(Option, unique=False, verbose_name='ответ из вариантов', on_delete=models.CASCADE)
+    response = models.ForeignKey(Option, related_name='response', unique=False, verbose_name='ответ из вариантов', on_delete=models.CASCADE)
