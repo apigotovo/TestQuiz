@@ -44,7 +44,6 @@ class TextAnswerSerializer(serializers.ModelSerializer):
 
 
 class CreateAnswerSerializer(serializers.ModelSerializer):
-
     response_options = OptionAnswerSerializer(many=True, required=False)
     response_text = TextAnswerSerializer(required=False)
 
@@ -72,23 +71,27 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         elif validated_data['question'].q_type == 'check':
             response_options = validated_data.pop('response_options', None)
             if response_options is not None:
-                answer = BaseAnswer.objects.create(
+                for response in response_options:
+                    OptionAnswer.objects.create(
+                        question=validated_data['question'],
+                        respondent=validated_data['respondent'],
+                        response=response['response']
+                    )
+                answer = BaseAnswer.objects.filter(
                     question=validated_data['question'],
                     respondent=validated_data['respondent']
-                )
-                for response in response_options:
-                    OptionAnswer.objects.create(response=response['response'], baseanswer_ptr=answer)
+                ).first()
             else:
                 return ValueError('Необходимо передать выбранные варианты ответа')
 
         elif validated_data['question'].q_type == 'text':
             response = validated_data.pop('response_text', None)
             if response is not None:
-                answer = BaseAnswer.objects.create(
+                answer = TextAnswer.objects.create(
                     question=validated_data['question'],
-                    respondent=validated_data['respondent']
+                    respondent=validated_data['respondent'],
+                    response=response
                 )
-                TextAnswer.objects.create(response=response, baseanswer_ptr=answer)
             else:
                 raise ValueError('Необходимо передать текст ответа')
 

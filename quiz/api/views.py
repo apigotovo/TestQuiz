@@ -7,16 +7,17 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import api_view
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveDestroyAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveDestroyAPIView, DestroyAPIView, UpdateAPIView, \
+    ListCreateAPIView
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Poll, Option, Question
+from .models import Poll, Option, Question, BaseAnswer
 from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerializer, UpdatePollSerializer, \
     AddQuestionSerializer, AllQuestionSerializer, UpdateQuestionSerializer, CreateAnswerSerializer, \
-    CreateRespondentSerializer
+    CreateRespondentSerializer, logger
 
 
 # Методы для администраторов
@@ -87,6 +88,7 @@ class ListRespondentPoll(ListAPIView):
 
 class CreateAnswer(CreateAPIView):
     serializer_class = CreateAnswerSerializer
+    queryset = BaseAnswer.objects.all()
 
 
 class CreateRespondent(CreateAnswer):

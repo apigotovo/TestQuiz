@@ -26,9 +26,9 @@ class Question(models.Model):
         return str(self.title)
 
     QUESTION_TYPES = (
-        ('radio', 'Один вариант из предложенных'),
-        ('check', 'Один или несколько вариантов из предложенных'),
-        ('text', 'Произвольный текст'),
+        ('radio', 'один вариант из предложенных'),
+        ('check', 'один или несколько вариантов из предложенных'),
+        ('text', 'произвольный текст'),
     )
 
     poll = models.ForeignKey(Poll, unique=False, on_delete=models.CASCADE, verbose_name='опрос')
@@ -37,6 +37,10 @@ class Question(models.Model):
 
 
 class Option(models.Model):
+
+    class Meta:
+        verbose_name_plural = 'варианты ответа'
+        verbose_name = 'вариант ответа'
 
     def __str__(self):
         return str(self.title)
@@ -48,7 +52,7 @@ class Option(models.Model):
 class Respondent(models.Model):
 
     def __str__(self):
-        return str(self.id)
+        return str(self.pk)
 
     class Meta:
         verbose_name_plural = 'пользователи'
@@ -58,7 +62,7 @@ class Respondent(models.Model):
 class BaseAnswer(models.Model):
 
     def __str__(self):
-        return str(self.question)
+        return 'Ответ ' + str(self.respondent) + ' на ' + str(self.question)
 
     class Meta:
         verbose_name_plural = 'ответы'
@@ -86,7 +90,7 @@ class OptionAnswer(BaseAnswer):
         return str(self.response)
 
     class Meta:
-        verbose_name_plural = 'опции'
-        verbose_name = 'опция'
+        verbose_name_plural = 'выбранные опции'
+        verbose_name = 'выбранная опция'
 
     response = models.ForeignKey(Option, related_name='response', unique=False, verbose_name='ответ из вариантов', on_delete=models.CASCADE)
