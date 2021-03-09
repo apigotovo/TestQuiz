@@ -64,7 +64,6 @@ class UpdateQuestion(UpdateAPIView):
 
 class ListAllQuestions(ListAPIView):
     serializer_class = AllQuestionSerializer
-    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         return Question.objects.filter(poll=self.kwargs['pk'])
