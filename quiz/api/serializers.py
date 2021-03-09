@@ -1,4 +1,5 @@
 import os
+from collections import OrderedDict
 from datetime import datetime
 
 from django.conf import settings
@@ -6,6 +7,9 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from .models import Poll, Question, BaseAnswer, Option, OptionAnswer, TextAnswer, Respondent
+
+
+EMPTY_VALUES = ('', None, [], ())
 
 
 def logger(message, mr_data):
@@ -98,7 +102,6 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         return answer
 
 
-# Админские сериалайзеры
 # Обновление опроса
 class UpdatePollSerializer(serializers.ModelSerializer):
     class Meta:
@@ -196,7 +199,7 @@ class DetailOptionAnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OptionAnswer
-        fields = ['id', 'response']
+        fields = ['response']
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -207,6 +210,11 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseAnswer
         fields = ['answer_option', 'answer_text']
+
+    def to_representation(self, instance):
+        fields = super().to_representation(instance)
+        return OrderedDict((k, v) for k, v in fields.items()
+                           if v not in EMPTY_VALUES)
 
 
 class QuestionSerializer(serializers.ModelSerializer):
