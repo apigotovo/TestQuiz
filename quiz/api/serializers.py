@@ -202,10 +202,11 @@ class DetailOptionAnswerSerializer(serializers.ModelSerializer):
 class AnswerSerializer(serializers.ModelSerializer):
 
     answer_option = DetailOptionAnswerSerializer(read_only=True, required=False)
+    answer_text = TextAnswerSerializer(read_only=True, required=False)
 
     class Meta:
         model = BaseAnswer
-        fields = ['answer_option']
+        fields = ['answer_option', 'answer_text']
 
 
 class QuestionSerializer(serializers.ModelSerializer):
