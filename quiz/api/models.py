@@ -2,7 +2,6 @@ from django.db import models
 
 
 class Poll(models.Model):
-
     class Meta:
         verbose_name_plural = 'опросы'
         verbose_name = 'опрос'
@@ -17,7 +16,6 @@ class Poll(models.Model):
 
 
 class Question(models.Model):
-
     class Meta:
         verbose_name_plural = 'вопросы'
         verbose_name = 'вопрос'
@@ -31,13 +29,12 @@ class Question(models.Model):
         ('text', 'произвольный текст'),
     )
 
-    poll = models.ForeignKey(Poll, unique=False, on_delete=models.CASCADE, verbose_name='опрос')
+    poll = models.ForeignKey(Poll, related_name='poll', unique=False, on_delete=models.CASCADE, verbose_name='опрос')
     title = models.CharField(max_length=140, verbose_name='вопрос')
     q_type = models.CharField(choices=QUESTION_TYPES, max_length=5, verbose_name='тип вопроса')
 
 
 class Option(models.Model):
-
     class Meta:
         verbose_name_plural = 'варианты ответа'
         verbose_name = 'вариант ответа'
@@ -45,7 +42,8 @@ class Option(models.Model):
     def __str__(self):
         return str(self.title)
 
-    question = models.ForeignKey(Question, related_name='options', unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
+    question = models.ForeignKey(Question, related_name='options', unique=False, on_delete=models.CASCADE,
+                                 verbose_name='вопрос')
     title = models.CharField(max_length=50, verbose_name='вариант ответа')
 
 
@@ -68,8 +66,10 @@ class BaseAnswer(models.Model):
         verbose_name_plural = 'ответы'
         verbose_name = 'ответ'
 
-    question = models.ForeignKey(Question, related_name='question', unique=False, on_delete=models.CASCADE, verbose_name='вопрос')
-    respondent = models.ForeignKey(Respondent, related_name='respondent', unique=False, on_delete=models.CASCADE, verbose_name='пользователь')
+    question = models.ForeignKey(Question, related_name='question', unique=False, on_delete=models.CASCADE,
+                                 verbose_name='вопрос')
+    respondent = models.ForeignKey(Respondent, related_name='respondent', unique=False, on_delete=models.CASCADE,
+                                   verbose_name='пользователь')
 
 
 class TextAnswer(BaseAnswer):
@@ -82,6 +82,7 @@ class TextAnswer(BaseAnswer):
         verbose_name = 'текст'
 
     response = models.TextField(verbose_name='ответ текстом')
+    pm_link = models.OneToOneField(BaseAnswer, on_delete=models.CASCADE, parent_link=True, related_name='answer_text')
 
 
 class OptionAnswer(BaseAnswer):
@@ -93,4 +94,6 @@ class OptionAnswer(BaseAnswer):
         verbose_name_plural = 'выбранные опции'
         verbose_name = 'выбранная опция'
 
-    response = models.ForeignKey(Option, related_name='response', unique=False, verbose_name='ответ из вариантов', on_delete=models.CASCADE)
+    response = models.ForeignKey(Option, related_name='response', unique=False, verbose_name='ответ из вариантов',
+                                 on_delete=models.CASCADE)
+    pm_link = models.OneToOneField(BaseAnswer, on_delete=models.CASCADE, parent_link=True, related_name='answer_option')

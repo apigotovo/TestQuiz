@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from .models import Poll, Option, Question, BaseAnswer
 from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerializer, UpdatePollSerializer, \
     AddQuestionSerializer, AllQuestionSerializer, UpdateQuestionSerializer, CreateAnswerSerializer, \
-    CreateRespondentSerializer, logger
+    CreateRespondentSerializer, logger, AnswerSerializer, QuestionSerializer
 
 
 # Методы для администраторов
@@ -82,8 +82,13 @@ class ListActivePoll(ListAPIView):
 class ListRespondentPoll(ListAPIView):
     serializer_class = RespondentPollSerializer
 
-    def get(self, request, *args, **kwargs):
-        return Poll.objects.filter(question__baseanswer__respondent=self.kwargs['respondent_id'])
+    def get_serializer_context(self):
+        a = super().get_serializer_context()
+        a['respondent_id'] = self.kwargs['pk']
+        return a
+
+    def get_queryset(self):
+        return Poll.objects.filter(poll__question__respondent=self.kwargs['pk']).distinct()
 
 
 class CreateAnswer(CreateAPIView):

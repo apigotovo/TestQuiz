@@ -21,5 +21,5 @@ urlpatterns = [
     path('get/respondentid/', CreateRespondent.as_view(), name='getrespondentid'),
     path('sendanswer/', CreateAnswer.as_view(), name='sendanswer'),
     path('poll/active/list/', ListActivePoll.as_view(), name='listpoll'),
-    path('poll/<int:pk>/list/<int:respondent_id>', ListRespondentPoll.as_view(), name='mylistpoll'),
+    path('passedpoll/<int:pk>/list/', ListRespondentPoll.as_view(), name='passedpoll'),
     ]

@@ -98,31 +98,6 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         return answer
 
 
-# Получение пройденных опросов с вопросами и ответами (блок сериалайзеров)
-class AnswerSerializer(serializers.ModelSerializer):
-    answer = serializers.StringRelatedField(many=True)
-
-    class Meta:
-        model = BaseAnswer
-        fields = ['answer', ]
-
-
-class QuestionSerializer(serializers.ModelSerializer):
-    answer = AnswerSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Question
-        fields = ['title', 'answer']
-
-
-class RespondentPollSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Poll
-        fields = ['title', 'description', 'questions']
-
-
 # Админские сериалайзеры
 # Обновление опроса
 class UpdatePollSerializer(serializers.ModelSerializer):
@@ -211,3 +186,57 @@ class AllQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['id', 'poll', 'title', 'q_type', 'options']
+
+
+# Получение пройденных опросов с вопросами и ответами (блок сериалайзеров)
+class DetailOptionAnswerSerializer(serializers.ModelSerializer):
+
+    response = serializers.StringRelatedField()
+
+    class Meta:
+        model = OptionAnswer
+        fields = ['id', 'response']
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+
+    answer_option = DetailOptionAnswerSerializer(read_only=True, required=False)
+
+    class Meta:
+        model = BaseAnswer
+        fields = ['answer_option']
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+
+    answer = serializers.SerializerMethodField('get_answer')
+
+    def get_answer(self, question):
+        answer = BaseAnswer.objects.filter(
+            respondent=self.context['respondent_id'],
+            question=question,
+        )
+        answer_serializer = AnswerSerializer(instance=answer, many=True)
+        return answer_serializer.data
+
+    class Meta:
+        model = Question
+        fields = ['id', 'title', 'answer']
+
+
+class RespondentPollSerializer(serializers.ModelSerializer):
+
+    questions = serializers.SerializerMethodField('get_questions')
+
+    def get_questions(self, poll):
+        questions = Question.objects.filter(question__respondent=self.context['respondent_id']).distinct()
+        questions_serializer = QuestionSerializer(
+            instance=questions,
+            many=True,
+            context={'respondent_id': self.context['respondent_id']}
+        )
+        return questions_serializer.data
+
+    class Meta:
+        model = Poll
+        fields = ['id', 'title', 'questions', ]
