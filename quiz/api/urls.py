@@ -16,7 +16,7 @@ urlpatterns = [
     path('question/<int:pk>/delete/', DeleteQuestion.as_view(), name='deletequestion'),
     path('question/<int:pk>/list/', ListAllQuestions.as_view(), name='listquestions'),
     # Авторизация (для администраторов)
-    path('api-token-auth/', views.obtain_auth_token),
+    path('token-auth/', views.obtain_auth_token),
     # Для пользователей
     path('get/respondentid/', CreateRespondent.as_view(), name='getrespondentid'),
     path('sendanswer/', CreateAnswer.as_view(), name='sendanswer'),

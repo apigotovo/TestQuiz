@@ -90,7 +90,7 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
                 answer = TextAnswer.objects.create(
                     question=validated_data['question'],
                     respondent=validated_data['respondent'],
-                    response=response
+                    response=response['response']
                 )
             else:
                 raise ValueError('Необходимо передать текст ответа')
@@ -121,17 +121,18 @@ class OptionSerializer(serializers.ModelSerializer):
 
 
 class AddQuestionSerializer(serializers.ModelSerializer):
-    options = OptionSerializer(many=True)
+    options = OptionSerializer(many=True, required=False)
 
     class Meta:
         model = Question
         fields = ['poll', 'title', 'q_type', 'options']
 
     def create(self, validated_data):
-        options_data = validated_data.pop('options')
+        options_data = validated_data.pop('options', None)
         question = Question.objects.create(**validated_data)
-        for option in options_data:
-            Option.objects.create(question=question, **option)
+        if options_data is not None:
+            for option in options_data:
+                Option.objects.create(question=question, **option)
         return question
 
 
