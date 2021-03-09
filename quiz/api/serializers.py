@@ -227,6 +227,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 class RespondentPollSerializer(serializers.ModelSerializer):
 
     questions = serializers.SerializerMethodField('get_questions')
+    poll = serializers.CharField(source='title')
 
     def get_questions(self, poll):
         questions = Question.objects.filter(question__respondent=self.context['respondent_id']).distinct()
@@ -239,4 +240,4 @@ class RespondentPollSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Poll
-        fields = ['id', 'title', 'questions', ]
+        fields = ['poll', 'id', 'questions', ]
