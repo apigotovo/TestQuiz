@@ -1,23 +1,9 @@
-import os
 from collections import OrderedDict
-from datetime import datetime
-
-from django.conf import settings
-from django.db.models import Q
 from rest_framework import serializers
 
 from .models import Poll, Question, BaseAnswer, Option, OptionAnswer, TextAnswer, Respondent
 
-
 EMPTY_VALUES = ('', None, [], ())
-
-
-def logger(message, mr_data):
-    now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    path = os.path.join(settings.BASE_DIR, f'error_log/{now}_{message}.txt')
-    file = open(path, 'w')
-    file.write(str(mr_data))
-    file.close()
 
 
 # Получение всех опросов
@@ -56,7 +42,6 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         fields = ['question', 'respondent', 'response_options', 'response_text']
 
     def validate(self, attrs):
-        logger('val', attrs)
 
         if BaseAnswer.objects.filter(respondent=attrs['respondent'], question=attrs['question']).exists():
             raise serializers.ValidationError(
