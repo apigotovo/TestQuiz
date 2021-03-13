@@ -55,49 +55,96 @@ class CreateAnswerSerializer(serializers.ModelSerializer):
         model = BaseAnswer
         fields = ['question', 'respondent', 'response_options', 'response_text']
 
+    def validate(self, attrs):
+        logger('val', attrs)
+
+        if BaseAnswer.objects.filter(respondent=attrs['respondent'], question=attrs['question']).exists():
+            raise serializers.ValidationError(
+                f"Респондент '{attrs['respondent']}' уже дал ответ на вопрос '{attrs['question']}'"
+            )
+
+        if attrs['question'].q_type == 'radio':
+            response_options = attrs.get('response_options', None)
+            if response_options is None:
+                raise serializers.ValidationError(
+                    f"Необходимо передать выбранные вариант ответа в поле 'response_options' "
+                )
+            if len(response_options) > 1:
+                raise serializers.ValidationError(
+                    f"Для вопроса {attrs['question']} необходимо выбрать только один вариант"
+                )
+            elif len(response_options) < 1:
+                raise serializers.ValidationError(
+                    f"Необходимо передать выбранный вариант ответа"
+                )
+
+            options_for_this_question = Option.objects.filter(question=attrs['question'])
+            if not (response_options[0]['response'] in options_for_this_question):
+                raise serializers.ValidationError(
+                    f"Некорректный вариант ответа '{response_options[0]['response']}' на вопрос '{attrs['question']}'. "
+                    f"Данный вариант ответа относится к другому вопросу."
+                )
+
+        if attrs['question'].q_type == 'check':
+            response_options = attrs.get('response_options', None)
+            if response_options is None:
+                raise serializers.ValidationError(
+                    f"Необходимо передать выбранные вариант ответа в поле 'response_options' "
+                )
+
+            if len(response_options) < 1:
+                raise serializers.ValidationError(
+                    f"Необходимо передать выбранные вариант ответа"
+                )
+            options_for_this_question = Option.objects.filter(question=attrs['question'])
+            for option in response_options:
+                if not (option['response'] in options_for_this_question):
+                    raise serializers.ValidationError(
+                        f"Некорректный вариант ответа '{option['response']}' на вопрос '{attrs['question']}'. "
+                        f"Данный вариант ответа относится к другому вопросу."
+                    )
+
+        if attrs['question'].q_type == 'text':
+            response_text = attrs.get('response_text', None)
+            if response_text is None:
+                raise serializers.ValidationError(
+                    f"Необходимо передать ответ в поле 'response_text' "
+                )
+
+        return attrs
+
     def create(self, validated_data):
 
         if validated_data['question'].q_type == 'radio':
-            response_options = validated_data.pop('response_options', None)
-            if response_options is not None:
-                response = response_options.pop()
-                if len(response_options) == 0:
-                    answer = OptionAnswer.objects.create(
-                        question=validated_data['question'],
-                        respondent=validated_data['respondent'],
-                        response=response['response']
-                    )
-                else:
-                    raise ValueError('Для данного вопроса необходимо выбрать 1 вариант ответа')
-            else:
-                raise ValueError('Необходимо передать выбранный вариант ответа')
+            response_options = validated_data.pop('response_options')
+            response = response_options.pop()
+            answer = OptionAnswer.objects.create(
+                question=validated_data['question'],
+                respondent=validated_data['respondent'],
+                response=response['response']
+            )
 
         elif validated_data['question'].q_type == 'check':
-            response_options = validated_data.pop('response_options', None)
-            if response_options is not None:
-                for response in response_options:
-                    OptionAnswer.objects.create(
-                        question=validated_data['question'],
-                        respondent=validated_data['respondent'],
-                        response=response['response']
-                    )
-                answer = BaseAnswer.objects.filter(
-                    question=validated_data['question'],
-                    respondent=validated_data['respondent']
-                ).first()
-            else:
-                return ValueError('Необходимо передать выбранные варианты ответа')
-
-        elif validated_data['question'].q_type == 'text':
-            response = validated_data.pop('response_text', None)
-            if response is not None:
-                answer = TextAnswer.objects.create(
+            response_options = validated_data.pop('response_options')
+            for response in response_options:
+                OptionAnswer.objects.create(
                     question=validated_data['question'],
                     respondent=validated_data['respondent'],
                     response=response['response']
                 )
-            else:
-                raise ValueError('Необходимо передать текст ответа')
+            answer = BaseAnswer.objects.filter(
+                question=validated_data['question'],
+                respondent=validated_data['respondent']
+            ).first()
+
+        elif validated_data['question'].q_type == 'text':
+            response = validated_data.pop('response_text')
+
+            answer = TextAnswer.objects.create(
+                question=validated_data['question'],
+                respondent=validated_data['respondent'],
+                response=response['response']
+            )
 
         return answer
 
