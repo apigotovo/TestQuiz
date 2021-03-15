@@ -2,6 +2,7 @@ from datetime import datetime
 
 
 from django.db.models import Q
+from django.http import HttpResponse
 
 from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -89,3 +90,9 @@ class CreateAnswer(CreateAPIView):
 
 class CreateRespondent(CreateAnswer):
     serializer_class = CreateRespondentSerializer
+
+
+def api_doc(request):
+    return HttpResponse(
+        '<a href="https://documenter.getpostman.com/view/11811108/Tz5s2w3d">Документация по API для системы опросов</a>'
+    )

@@ -170,6 +170,11 @@ class AddQuestionSerializer(serializers.ModelSerializer):
                 Option.objects.create(question=question, **option)
         return question
 
+    def to_representation(self, instance):
+        fields = super().to_representation(instance)
+        return OrderedDict((k, v) for k, v in fields.items()
+                           if v not in EMPTY_VALUES)
+
 
 # Обновление вопроса (блок сериалайзеров)
 class UpdateOptionSerializer(serializers.ModelSerializer):
@@ -222,6 +227,11 @@ class AllQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['id', 'poll', 'title', 'q_type', 'options']
+
+    def to_representation(self, instance):
+        fields = super().to_representation(instance)
+        return OrderedDict((k, v) for k, v in fields.items()
+                           if v not in EMPTY_VALUES)
 
 
 # Получение пройденных опросов с вопросами и ответами (блок сериалайзеров)
