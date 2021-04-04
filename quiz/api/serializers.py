@@ -20,7 +20,6 @@ class CreateRespondentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 # Ответ на вопрос (публикация ответа) (блок сериалайзеров)
 class OptionAnswerSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 
-
 from django.db.models import Q
 from django.http import HttpResponse
 
@@ -14,14 +13,12 @@ from .serializers import PollSerializer, RespondentPollSerializer, AddPollSerial
     CreateRespondentSerializer
 
 
-
 # Методы для администраторов
 
 # Обработка опросов
 class AddPoll(CreateAPIView):
     serializer_class = AddPollSerializer
     permission_classes = [IsAdminUser]
-
 
 
 class UpdatePoll(UpdateAPIView):
